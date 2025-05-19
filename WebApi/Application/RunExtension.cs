@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using WebApi.Infrastructure.Components;
+using WebApi.Services;
 
 namespace WebApi.Application;
 
@@ -53,6 +54,7 @@ public static class RunExtension
 
     public static void RegistrationEndpoints(this WebApplicationBuilder builder)
     {
+        builder.Services.AddScoped<AdminService>();
         builder.Services.AddControllers();
     }
 
