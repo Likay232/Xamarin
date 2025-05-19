@@ -2,7 +2,7 @@
 
 public class TestTask : BaseEntity
 {
-    public int TaskId { get; set; }
+    public int TaskForTestId { get; set; }
     public TaskForTest TaskForTest { get; set; }
     
     public int TestId { get; set; }

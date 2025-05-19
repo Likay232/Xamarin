@@ -40,4 +40,6 @@ public class DatabaseContext : DbContext
     public DbSet<Lesson> Lessons { get; set; }
     public DbSet<CompletedTask> CompletedTasks { get; set; }
     public DbSet<Progress> Progresses { get; set; }
+    public DbSet<TaskForTest> Tasks { get; set; }
+    public DbSet<Test> Tests { get; set; }
 }
