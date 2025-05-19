@@ -3,6 +3,7 @@ using WebApi.Application;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.ConnectionCreate();
+builder.Services.AddJwtAuthentication();
 
 builder.RegistrationEndpoints();
 

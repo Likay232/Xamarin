@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using WebApi.Infrastructure.Models.DTO;
 using WebApi.Infrastructure.Models.Requests;
 using WebApi.Services;
@@ -6,6 +7,7 @@ using WebApi.Services;
 namespace WebApi.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("[controller]/[action]")]
 public class AdminController(AdminService service) : ControllerBase
 {

@@ -1,4 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using WebApi.Infrastructure.Components;
 using WebApi.Services;
@@ -22,7 +25,7 @@ public static class RunExtension
                     .AllowAnyHeader();
             });
         });
-        
+
         services.AddSwaggerGen(options =>
         {
             options.CustomSchemaIds(type => $"{type.Namespace}.{type.Name}");
@@ -33,14 +36,35 @@ public static class RunExtension
         services.AddScoped(_ => new DataComponent(connectionString));
     }
 
+    public static void AddJwtAuthentication(this IServiceCollection services)
+    {
+        var secretKey = Environment.GetEnvironmentVariable("JWT_SECRET") ?? "super_secret_key_12345";
+
+        services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        }).AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
+            };
+        });
+    }
+
     public static void MappingEndpoints(this WebApplication app)
     {
         app.MigrateDatabase();
         app.UseHttpsRedirection();
         app.UseRouting();
-        
+
         app.UseCors("AllowedOrigins");
-        
+
         app.UseSwagger();
 
         app.UseSwaggerUI(options =>
@@ -48,17 +72,18 @@ public static class RunExtension
             options.SwaggerEndpoint("/swagger/v1/swagger.json", "WebApi");
             options.RoutePrefix = "swagger";
         });
-        
+
         app.UseEndpoints(endpoints => endpoints.MapControllers());
     }
 
     public static void RegistrationEndpoints(this WebApplicationBuilder builder)
     {
         builder.Services.AddScoped<AdminService>();
+        builder.Services.AddScoped<AuthService>();
         builder.Services.AddControllers();
     }
 
-    
+
     private static void MigrateDatabase(this WebApplication app)
     {
         using var scope = app.Services.CreateScope();

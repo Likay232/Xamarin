@@ -7,4 +7,6 @@ public class CompletedTask : BaseEntity
     
     public int TaskId { get; set; }
     public TaskForTest TaskForTest { get; set; }
+    
+    public bool IsCorrect { get; set; }
 }
