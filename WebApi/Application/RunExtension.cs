@@ -25,7 +25,7 @@ public static class RunExtension
         services.AddSwaggerGen(options =>
         {
             options.CustomSchemaIds(type => $"{type.Namespace}.{type.Name}");
-            options.SwaggerDoc("v1", new OpenApiInfo { Title = "BeautySchools.Backend", Version = "v1" });
+            options.SwaggerDoc("v1", new OpenApiInfo { Title = "WebApi", Version = "v1" });
         });
 
         services.AddTransient<DatabaseContext>(_ => new DatabaseContext(connectionString));

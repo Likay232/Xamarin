@@ -1,10 +1,19 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using WebApi.Infrastructure.Models.Storage;
 
 namespace WebApi.Infrastructure.Components;
 
 public class DataComponent(string connectionString)
 {
-    //TODO: Обновить после создания бд схемы
+    public IQueryable<User> Users => new DatabaseContext(connectionString).Users;
+    
+    public IQueryable<Lesson> Lessons => new DatabaseContext(connectionString).Lessons;
+    
+    public IQueryable<CompletedTask> CompletedTasks => new DatabaseContext(connectionString).CompletedTasks;
+    
+    public IQueryable<Progress> Progresses => new DatabaseContext(connectionString).Progresses;
+    public IQueryable<TestTask> TestTasks => new DatabaseContext(connectionString).TestTasks;
+    public IQueryable<Theme> Themes => new DatabaseContext(connectionString).Themes;
     
     public async Task<bool> Insert<T>(T entityItem) where T : class
     {
