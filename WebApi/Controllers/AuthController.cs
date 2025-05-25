@@ -13,11 +13,25 @@ public class AuthController(AuthService service) : ControllerBase
     {
         try
         {
-            return StatusCode(200, service.LoginAdmin(request));
+            return StatusCode(200, await service.LoginAdmin(request));
         }
         catch (Exception e)
         {
             return StatusCode(500, e.Message);
         }
     }
+
+    [HttpPost]
+    public async Task<ActionResult<string?>> LoginClient(Login request)
+    {
+        try
+        {
+            return StatusCode(200, await service.Login(request));
+        }
+        catch (Exception e)
+        {
+            return StatusCode(500, e.Message);
+        }
+    }
+
 }

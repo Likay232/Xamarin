@@ -30,10 +30,10 @@ namespace WebApi.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("TaskForTestId")
-                        .HasColumnType("integer");
+                    b.Property<bool>("IsCorrect")
+                        .HasColumnType("boolean");
 
-                    b.Property<int>("TaskId")
+                    b.Property<int>("TaskForTestId")
                         .HasColumnType("integer");
 
                     b.Property<int>("UserId")

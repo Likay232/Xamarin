@@ -9,7 +9,7 @@ public class DatabaseContext : DbContext
     
     public DatabaseContext()
     {
-        _connectionString = "Server=localhost;Port=5432;User Id=postgres;Password=123;Database=postgres";
+        _connectionString = "Server=localhost;Port=5434;User Id=postgres;Password=12345;Database=postgres";
     }
 
     public DatabaseContext(string connectionString)
