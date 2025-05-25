@@ -8,6 +8,24 @@ namespace WebApi.Services;
 
 public class ClientService(DataComponent component)
 {
+    public async Task<bool> RegisterDevice(RegisterDevice request)
+    {
+        if (!await component.Users.AnyAsync(u => u.Id == request.UserId))
+            throw new Exception("User not found");
+
+        if (await component.UserDevices.AnyAsync(u =>
+                u.UserId == request.UserId && u.DeviceToken == request.DeviceToken))
+            return true;
+
+        var newUserDevice = new UserDevice
+        {
+            UserId = request.UserId,
+            DeviceToken = request.DeviceToken,
+        };
+        
+        return await component.Insert(newUserDevice);
+    }
+
     public async Task<List<ThemeDto>> GetThemes()
     {
         return await component.Themes.Select(t => new ThemeDto
@@ -22,14 +40,15 @@ public class ClientService(DataComponent component)
     {
         if (!await component.Themes.AnyAsync(t => t.Id == request.ThemeId))
             throw new Exception("Тема не найдена.");
-        
+
         var completed = await component.CompletedTasks
             .Where(ct => ct.UserId == request.UserId)
             .ToListAsync();
 
         foreach (var completedTask in completed)
         {
-            Console.WriteLine($"Completed Task: {completedTask.Id} - taskId: {completedTask.TaskForTestId} UserID - {completedTask.UserId} Correct - {completedTask.IsCorrect}");
+            Console.WriteLine(
+                $"Completed Task: {completedTask.Id} - taskId: {completedTask.TaskForTestId} UserID - {completedTask.UserId} Correct - {completedTask.IsCorrect}");
         }
 
         var tasks = await component.Tasks
@@ -98,32 +117,71 @@ public class ClientService(DataComponent component)
 
     public async Task<CheckedTest> CheckTest(TestForCheck test)
     {
-        List<UserAnswer> wrongAnswers = new List<UserAnswer>();
-        
+        var wrongTasks = new List<WrongTask>();
+
         foreach (var userAnswer in test.Answers)
         {
             var task = await component.Tasks.FirstOrDefaultAsync(t => t.Id == userAnswer.TaskId);
-            var completedTask = new CompletedTask();
 
             if (task == null || task.CorrectAnswer != userAnswer.Answer)
             {
-                wrongAnswers.Add(userAnswer);
-            }
-            
-            if (task != null)
-            {
-                completedTask.TaskForTestId = userAnswer.TaskId;
-                completedTask.UserId = test.UserId;
-                completedTask.IsCorrect = task.CorrectAnswer == userAnswer.Answer;
+                var wrongTask = new WrongTask
+                {
+                    Text = task?.Text,
+                    ImageData = task?.ImageData,
+                    FileData = task?.FileData,
+                    Answer = userAnswer.Answer,
+                };
+
+                wrongTasks.Add(wrongTask);
             }
 
-            await component.Insert(completedTask);
+            var existing = await component.CompletedTasks
+                .FirstOrDefaultAsync(ct => ct.UserId == test.UserId && ct.TaskForTestId == userAnswer.TaskId);
+
+            var isCorrect = task != null && task.CorrectAnswer == userAnswer.Answer;
+
+            if (existing != null)
+            {
+                existing.IsCorrect = isCorrect;
+                await component.Update(existing);
+            }
+            else
+            {
+                var completedTaskToAdd = new CompletedTask
+                {
+                    TaskForTestId = userAnswer.TaskId,
+                    UserId = test.UserId,
+                    IsCorrect = isCorrect
+                };
+
+                await component.Insert(completedTaskToAdd);
+            }
         }
 
         return new CheckedTest
         {
-            WrongAnswers = wrongAnswers,
-            Score = $"{test.Answers.Count - wrongAnswers.Count} / {test.Answers.Count}"
-        }; 
+            WrongTasks = wrongTasks,
+            Score = $"{test.Answers.Count - wrongTasks.Count} / {test.Answers.Count}"
+        };
     }
+
+    public async Task<TaskForClientDto> GetTaskById(int taskId)
+    {
+        var taskFromDb = await component.Tasks.FirstOrDefaultAsync(t => t.Id == taskId);
+        
+        if (taskFromDb == null)
+            throw new Exception("Задание с заданным id не найдено.");
+
+        var task = new TaskForClientDto
+        {
+            Id = taskId,
+            Text = taskFromDb.Text,
+            DifficultyLevel = taskFromDb.DifficultyLevel,
+            File = taskFromDb.FileData,
+            Image = taskFromDb.ImageData,
+        };
+        
+        return task;
+    } 
 }

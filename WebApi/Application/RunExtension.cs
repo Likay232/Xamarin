@@ -82,6 +82,7 @@ public static class RunExtension
         builder.Services.AddScoped<AuthService>();
         builder.Services.AddScoped<ClientService>();
         builder.Services.AddControllers();
+        
     }
 
 

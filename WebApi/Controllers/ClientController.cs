@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using WebApi.Infrastructure.Models.DTO;
 using WebApi.Infrastructure.Models.Requests;
+using WebApi.Infrastructure.Models.Storage;
 using WebApi.Services;
 
 namespace WebApi.Controllers;
@@ -9,6 +10,19 @@ namespace WebApi.Controllers;
 [Route("[controller]/[action]")]
 public class ClientController(ClientService service) : ControllerBase
 {
+    [HttpPost]
+    public async Task<ActionResult<bool>> RegisterDevice(RegisterDevice request) 
+    {
+        try
+        {
+            return StatusCode(200, await service.RegisterDevice(request));
+        }
+        catch (Exception e)
+        {
+            return StatusCode(500, e.Message);
+        }
+    }
+    
     [HttpGet]
     public async Task<ActionResult<List<ThemeDto>>> GetThemes()
     {
@@ -99,6 +113,17 @@ public class ClientController(ClientService service) : ControllerBase
         }
     }
 
-
+    [HttpGet]
+    public async Task<ActionResult<TaskForTest>> GetTaskById(int taskId)
+    {
+        try
+        {
+            return StatusCode(200, await service.GetTaskById(taskId));
+        }
+        catch (Exception e)
+        {
+            return StatusCode(500, e.Message);
+        }
+    }
 
 }

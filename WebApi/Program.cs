@@ -7,6 +7,10 @@ builder.Services.AddJwtAuthentication();
 
 builder.RegistrationEndpoints();
 
+//builder.WebHost.ConfigureKestrel(options => options.ListenLocalhost(5000));
+
+builder.WebHost.ConfigureKestrel(options => options.ListenAnyIP(5000));
+
 var app = builder.Build();
 
 app.MappingEndpoints();
