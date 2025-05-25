@@ -32,6 +32,7 @@ public class DatabaseContext : DbContext
         modelBuilder.Entity<Progress>().ToTable("progresses");
         modelBuilder.Entity<Lesson>().ToTable("lessons");
         modelBuilder.Entity<CompletedTask>().ToTable("completed_tasks");
+        modelBuilder.Entity<UserDevice>().ToTable("user_devices");
     }
     
     public DbSet<User> Users { get; set; }
@@ -42,4 +43,6 @@ public class DatabaseContext : DbContext
     public DbSet<Progress> Progresses { get; set; }
     public DbSet<TaskForTest> Tasks { get; set; }
     public DbSet<Test> Tests { get; set; }
+    
+    public DbSet<UserDevice> UserDevices { get; set; }
 }
