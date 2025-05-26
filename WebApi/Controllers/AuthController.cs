@@ -6,14 +6,36 @@ namespace WebApi.Controllers;
 
 [ApiController]
 [Route("[controller]/[action]")]
-public class AuthController(AuthService service) : ControllerBase
+public class AuthController(AuthService service) : Controller
 {
+    [HttpGet]
+    public IActionResult LoginAdmin()
+    {
+        return View();
+    }
+    
     [HttpPost]
-    public async Task<ActionResult<string>> LoginAdmin(Login request)
+    public async Task<IActionResult> LoginAdmin([FromForm] Login request)
     {
         try
         {
-            return StatusCode(200, await service.LoginAdmin(request));
+            var token = await service.LoginAdmin(request);
+
+            if (string.IsNullOrEmpty(token))
+            {
+                return StatusCode(401, "Неверные логин / пароль.");
+            }
+            
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,      
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTimeOffset.UtcNow.AddHours(1)
+            };
+
+            Response.Cookies.Append("AuthToken", token, cookieOptions);
+
+            return RedirectToAction("Index", "Admin");
         }
         catch (Exception e)
         {

@@ -6,159 +6,275 @@ using WebApi.Services;
 
 namespace WebApi.Controllers;
 
-[ApiController]
-[Authorize]
+[Authorize(Roles = "Admin")]
 [Route("[controller]/[action]")]
-public class AdminController(AdminService service) : ControllerBase
+public class AdminController(AdminService service) : Controller
 {
     [HttpGet]
-    public async Task<ActionResult<List<UserDto>>> GetUsers()
+    public IActionResult Index()
     {
-        try
-        {
-            var users = await service.GetUsers();
-            
-            return StatusCode(200, users);
-        }
-        catch (Exception e)
-        {
-            return StatusCode(500, e.Message);
-        }
+        return View();
     }
-    
-    [HttpPost]
-    public async Task<ActionResult<bool>> ChangeUserPassword(ChangePassword request)
-    {
-        try
-        {
-            return StatusCode(200, await service.ChangeUserPassword(request));
-        }
-        catch (Exception e)
-        {
-            return StatusCode(500, e.Message);
-        }
-    }
-    
+
     [HttpGet]
-    public async Task<ActionResult<List<ThemeDto>>> GetThemes()
+    public async Task<IActionResult> Users()
     {
-        try
-        {
-            var themes = await service.GetThemes();
-            
-            return StatusCode(200, themes);
-        }
-        catch (Exception e)
-        {
-            return StatusCode(500, e.Message);
-        }
+        return View(await service.GetUsers());
     }
-    
-    [HttpPost]
-    public async Task<ActionResult<bool>> CreateNewTheme(CreateTheme request)
+
+    [HttpGet]
+    public async Task<IActionResult> SwitchBlockState(int userId)
     {
-        try
-        {
-            return StatusCode(200, await service.CreateNewTheme(request));
-        }
-        catch (Exception e)
-        {
-            return StatusCode(500, e.Message);
-        }
+        await service.SwitchBlockState(userId);
+        
+        return RedirectToAction(nameof(Users));
     }
-    
-    [HttpPost]
-    public async Task<ActionResult<bool>> AddTaskForTheme(TaskDto taskToAdd)
+
+    [HttpGet]
+    public async Task<IActionResult> ChangePasswordForUser(int userId)
     {
-        try
+        var user = await service.GetUser(userId);
+
+        if (user == null)
         {
-            return StatusCode(200, await service.AddTaskForTheme(taskToAdd));
+            return NotFound();
         }
-        catch (Exception e)
-        {
-            return StatusCode(500, e.Message);
-        }
-    }
-    
-    [HttpPost]
-    public async Task<ActionResult<bool>> EditTaskForTheme(TaskDto updatedEntry)
-    {
-        try
-        {
-            return StatusCode(200, await service.EditTaskForTheme(updatedEntry));
-        }
-        catch (Exception e)
-        {
-            return StatusCode(500, e.Message);
-        }
+
+        return View(user);
     }
 
     [HttpPost]
-    public async Task<ActionResult<bool>> DeleteTaskForTheme(int taskId)
+    public async Task<IActionResult> ChangePasswordForUser([FromForm] ChangePassword request)
     {
         try
         {
-            return StatusCode(200, await service.DeleteTaskForTheme(taskId));
-        }
-        catch (Exception e)
-        {
-            return StatusCode(500, e.Message);
-        }
-    }
+            var result = await service.ChangeUserPassword(request);
 
-    [HttpPost]
-    public async Task<ActionResult<bool>> AddLessonForTheme(LessonDto lessonToAdd)
-    {
-        try
-        {
-            return StatusCode(200, await service.AddLessonForTheme(lessonToAdd));
+            if (!result)
+            {
+                TempData["Error"] = "Ошибка при обновлении пароля";
+            }
+            else
+            {
+                TempData["Message"] = "Пароль успешно изменён";
+            }
+
+            return RedirectToAction("ChangePasswordForUser", new { request.userId });
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return StatusCode(500, e.Message);
+            TempData["Error"] = ex.Message;
+            return RedirectToAction("ChangePasswordForUser", new { request.userId });
         }
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<TaskDto>>> GetTasks()
+    public async Task<IActionResult> Themes()
+    {
+        return View(await service.GetThemes());
+    }
+    
+    [HttpGet]
+    public IActionResult AddTheme()
+    {
+        return View();
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> AddTheme([FromForm] CreateTheme request)
     {
         try
         {
+            await service.CreateNewTheme(request);
+            return RedirectToAction(nameof(Themes));
+        }
+        catch (Exception e)
+        {
+            ModelState.AddModelError("", $"Ошибка при создании темы: {e.Message}");
+            return View();
+        }
+    }
+
+    [HttpGet]
+    public IActionResult AddLesson(int themeId)
+    {
+        var model = new LessonDto {ThemeId = themeId};
+        return View(model);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> AddLesson([FromForm] LessonDto lessonToAdd)
+    {
+        try
+        {
+            await service.AddLessonForTheme(lessonToAdd);
+            return RedirectToAction(nameof(Themes));
+        }
+        catch (Exception e)
+        {
+            ModelState.AddModelError("", $"Ошибка при добавлении материала: {e.Message}");
+            return View(lessonToAdd);
+        }
+    }
+    
+    [HttpGet]
+    public IActionResult AddTask(int themeId)
+    {
+        var model = new TaskDto
+        {
+            ThemeId = themeId
+        };
+        return View(model);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> AddTask([FromForm] TaskDto model, IFormFile? Image, IFormFile? File)
+    {
+        if (!ModelState.IsValid)
+            return View(model);
+
+        try
+        {
+            if (Image is { Length: > 0 })
+            {
+                using var ms = new MemoryStream();
+                await Image.CopyToAsync(ms);
+                model.ImageData = ms.ToArray();
+            }
+
+            if (File is { Length: > 0 })
+            {
+                using var ms = new MemoryStream();
+                await File.CopyToAsync(ms);
+                model.FileData = ms.ToArray();
+            }
+
+            var success = await service.AddTaskForTheme(model);
+
+            if (success)
+                return RedirectToAction(nameof(Tasks), new { themeId = model.ThemeId });
+
+            ModelState.AddModelError("", "Не удалось добавить задание");
+            return View(model);
+        }
+        catch (Exception e)
+        {
+            ModelState.AddModelError("", $"Ошибка: {e.Message}");
+            return View(model);
+        }
+    }
+    
+    [HttpGet]
+    public async Task<IActionResult> Tasks(int themeId)
+    {
+        return View(await service.GetTasksForTheme(themeId));
+    }
+    
+    [HttpGet]
+    public async Task<IActionResult> DeleteTask(int taskId, int themeId)
+    {
+        try
+        {
+            var result = await service.DeleteTaskForTheme(taskId);
+            if (result)
+            {
+                return RedirectToAction(nameof(Tasks), new { themeId });
+            }
+
+            TempData["Error"] = "Не удалось удалить задание.";
+            return RedirectToAction(nameof(Tasks), new { themeId });
+        }
+        catch (Exception e)
+        {
+            TempData["Error"] = $"Ошибка при удалении задания: {e.Message}";
+            return RedirectToAction(nameof(Tasks), new { themeId });
+        }
+    }
+
+    
+    [HttpGet]
+    public async Task<IActionResult> EditTask(int taskId)
+    {
+        var task = await service.GetTaskById(taskId);
+        if (task == null)
+            return NotFound();
+
+        return View(task);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> EditTask([FromForm] TaskDto model, IFormFile? Image, IFormFile? File)
+    {
+        if (!ModelState.IsValid)
+            return View(model);
+
+        try
+        {
+            if (Image is { Length: > 0 })
+            {
+                using var ms = new MemoryStream();
+                await Image.CopyToAsync(ms);
+                model.ImageData = ms.ToArray();
+            }
+
+            if (File is { Length: > 0 })
+            {
+                using var ms = new MemoryStream();
+                await File.CopyToAsync(ms);
+                model.FileData = ms.ToArray();
+            }
+            
+            var result = await service.EditTaskForTheme(model);
+            if (result)
+                return RedirectToAction(nameof(Tasks), new { themeId = model.ThemeId });
+
+            ModelState.AddModelError("", "Не удалось обновить задание.");
+            return View(model);
+        }
+        catch (Exception e)
+        {
+            ModelState.AddModelError("", $"Ошибка: {e.Message}");
+            return View(model);
+        }
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> CreateTest()
+    {
+        var tasks = await service.GetTasks();
+        ViewBag.Tasks = tasks;
+        return View(new CreateTest());
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> CreateTest([FromForm] CreateTest request, string taskIdsStr)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(taskIdsStr))
+            {
+                ModelState.AddModelError("", "Не выбрано ни одного задания.");
+                var tasks = await service.GetTasks();
+                ViewBag.Tasks = tasks;
+                return View(request);
+            }
+
+            request.TaskIds = taskIdsStr
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(id => int.TryParse(id, out var parsedId) ? parsedId : (int?)null)
+                .Where(id => id.HasValue)
+                .Select(id => id!.Value)
+                .ToList();
+
+            var result = await service.CreateTest(request);
+            return RedirectToAction(nameof(Index));
+        }
+        catch (Exception e)
+        {
+            ModelState.AddModelError("", $"Ошибка при создании теста: {e.Message}");
             var tasks = await service.GetTasks();
-            
-            return StatusCode(200, tasks);
-        }
-        catch (Exception e)
-        {
-            return StatusCode(500, e.Message);
+            ViewBag.Tasks = tasks;
+            return View(request);
         }
     }
-    
-    [HttpPost]
-    public async Task<ActionResult<string>> CreateTest(CreateTest request)
-    {
-        try
-        {
-            return StatusCode(200, await service.CreateTest(request));
-        }
-        catch (Exception e)
-        {
-            return StatusCode(500, e.Message);
-        }
-    }
-
-    [HttpPost]
-    public async Task<ActionResult<bool>> SwitchBlockState(int userId)
-    {
-        try
-        {
-            return StatusCode(200, await service.SwitchBlockState(userId));
-        }
-        catch (Exception e)
-        {
-            return StatusCode(500, e.Message);
-        }
-    }
-
-
 }

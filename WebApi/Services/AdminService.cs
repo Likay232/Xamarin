@@ -16,19 +16,26 @@ public class AdminService(DataComponent component)
                 Id = u.Id,
                 FirstName = u.FirstName,
                 LastName = u.LastName,
+                IsBlocked = u.isBlocked
             })
             .ToListAsync();
+    }
+
+    public async Task<User?> GetUser(int userId)
+    {
+        return await component.Users
+            .FirstOrDefaultAsync(u => u.Id == userId);
     }
 
     public async Task<bool> SwitchBlockState(int userId)
     {
         var userToBlock = await component.Users.FirstOrDefaultAsync(u => u.Id == userId);
-        
+
         if (userToBlock == null)
             throw new Exception("Пользователь не найден.");
-        
+
         userToBlock.isBlocked = !userToBlock.isBlocked;
-        
+
         return await component.Update(userToBlock);
     }
 
@@ -52,6 +59,40 @@ public class AdminService(DataComponent component)
             Description = t.Description,
             Title = t.Title
         }).ToListAsync();
+    }
+
+    public async Task<List<TaskDto>> GetTasksForTheme(int themeId)
+    {
+        return await component.Tasks
+            .Where(t => t.ThemeId == themeId)
+            .Select(t => new TaskDto
+            {
+                Id = t.Id,
+                ThemeId = t.ThemeId,
+                Text = t.Text,
+                CorrectAnswer = t.CorrectAnswer,
+                DifficultyLevel = t.DifficultyLevel,
+                FileData = t.FileData,
+                ImageData = t.ImageData
+            })
+            .ToListAsync();
+    }
+
+    public async Task<TaskDto?> GetTaskById(int taskId)
+    {
+        var task = await component.Tasks.FirstOrDefaultAsync(t => t.Id == taskId);
+        return task == null
+            ? null
+            : new TaskDto
+            {
+                Id = task.Id,
+                Text = task.Text,
+                CorrectAnswer = task.CorrectAnswer,
+                DifficultyLevel = task.DifficultyLevel,
+                ThemeId = task.ThemeId,
+                ImageData = task.ImageData,
+                FileData = task.FileData
+            };
     }
 
     public async Task<bool> CreateNewTheme(CreateTheme request)
@@ -149,7 +190,7 @@ public class AdminService(DataComponent component)
 
         List<int> failedTaskIds = new List<int>();
 
-        foreach (var taskId in request.taskIds)
+        foreach (var taskId in request.TaskIds)
         {
             var result = await component.Insert(new TestTask
             {
@@ -170,5 +211,4 @@ public class AdminService(DataComponent component)
 
         return $"Тест успешно создан. ID: {newTest.Id}";
     }
-
 }

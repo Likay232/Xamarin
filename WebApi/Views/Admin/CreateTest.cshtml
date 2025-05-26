@@ -1,0 +1,45 @@
+﻿@model WebApi.Infrastructure.Models.Requests.CreateTest
+
+@{
+ViewBag.Title = "Создание варианта теста";
+Layout = "_MasterPage";
+}
+
+<h2>Создание теста</h2>
+
+<form asp-action="CreateTest" asp-controller="Admin" method="post" onsubmit="prepareTaskIds()">
+    <div class="mb-3">
+        <label for="Title">Название теста</label>
+        <input type="text" name="Title" id="Title" class="form-control" required />
+    </div>
+
+    <div class="mb-3">
+        <label>Выберите задания:</label>
+        <div class="form-check" style="max-height: 300px; overflow-y: auto;">
+            @foreach (var task in ViewBag.Tasks as List<WebApi.Infrastructure.Models.DTO.TaskDto>)
+            {
+            <div class="form-check">
+                <input class="form-check-input task-checkbox" type="checkbox" value="@task.Id" id="task_@task.Id" />
+                <label class="form-check-label" for="task_@task.Id">
+                    @task.Text
+                </label>
+            </div>
+            }
+        </div>
+    </div>
+
+    <input type="hidden" name="taskIdsStr" id="taskIds" />
+
+    <button type="submit" class="btn btn-primary">Создать тест</button>
+</form>
+
+@section Scripts {
+<script>
+    function prepareTaskIds() {
+        const checkboxes = document.querySelectorAll('.task-checkbox:checked');
+        const selectedIds = Array.from(checkboxes).map(cb => cb.value);
+        console.log(selectedIds)
+        document.getElementById('taskIds').value = selectedIds.join(',');
+    }
+</script>
+}

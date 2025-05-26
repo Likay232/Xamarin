@@ -1,0 +1,33 @@
+﻿@model WebApi.Infrastructure.Models.DTO.TaskDto
+@{
+    ViewBag.Title = "Добавить задание к теме";
+    Layout = "_MasterPage";
+}
+
+<h2>Добавить задание к теме ID: @Model.ThemeId</h2>
+
+<form method="post" asp-action="AddTask" asp-controller="Admin" enctype="multipart/form-data">
+    <input type="hidden" name="ThemeId" value="@Model.ThemeId"/>
+
+    <label name="Text">Текст задания</label><br />
+    <textarea name="Text" rows="4" required></textarea><br /><br />
+
+    <label name="CorrectAnswer">Верный ответ</label><br />
+    <input name="CorrectAnswer" type="text" required /><br /><br />
+
+    <label name="DifficultyLevel">Сложность</label><br />
+    <input name="DifficultyLevel" type="number" min="1" max="5" required /><br /><br />
+
+    <div>
+        <label>Картинка (опционально)</label>
+        <input type="file" name="Image" accept="image/*" />
+    </div>
+
+    <div>
+        <label>Файл (опционально)</label>
+        <input type="file" name="File" />
+    </div>
+
+    <button type="submit">Добавить задание</button>
+    <a href="@Url.Action("Themes", "Admin")" style="margin-left:10px;">Отмена</a>
+</form>

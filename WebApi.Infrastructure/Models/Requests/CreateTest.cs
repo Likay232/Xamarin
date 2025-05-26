@@ -4,5 +4,5 @@ public class CreateTest
 {
     public string Title { get; set; }
 
-    public List<int> taskIds { get; set; }
+    public List<int> TaskIds { get; set; }
 }

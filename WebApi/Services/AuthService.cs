@@ -11,7 +11,7 @@ public class AuthService(DataComponent component)
 {
     public async Task<string?> LoginAdmin(Login request)
     {
-        if (request.UserName == "admin" && request.Password == "admin123")
+        if (request is { UserName: "admin", Password: "admin123" })
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Environment.GetEnvironmentVariable("JWT_SECRET") ?? "super_secret_key_12345";

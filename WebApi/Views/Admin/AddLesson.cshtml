@@ -1,0 +1,21 @@
+﻿@model WebApi.Infrastructure.Models.DTO.LessonDto
+
+@{
+    ViewBag.Title = "Добавить материал к теме";
+    Layout = "_MasterPage";
+}
+
+<h2>Добавить материал к теме ID: @Model.ThemeId</h2>
+
+<form method="post" asp-action="AddLesson" asp-controller="Admin">
+    <input type="hidden" name="ThemeId" value="@Model.ThemeId" />
+
+    <label for="Text">Текст урока</label><br />
+    <textarea id="Text" name="Text" rows="4" required></textarea><br /><br />
+
+    <label for="Link">Ссылка (необязательно)</label><br />
+    <input type="url" id="Link" name="Link" /><br /><br />
+
+    <button type="submit">Добавить материал</button>
+    <a href="@Url.Action("Index", "Admin")" style="margin-left:10px;">Отмена</a>
+</form>

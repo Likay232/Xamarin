@@ -1,0 +1,39 @@
+﻿@model WebApi.Infrastructure.Models.DTO.TaskDto
+
+@{
+    ViewBag.Title = "Задания";
+    Layout = "_MasterPage";
+}
+
+
+<form asp-action="EditTask" asp-controller="Admin" method="post" enctype="multipart/form-data">
+    <input type="hidden" name="Id" value="@Model.Id" />
+    <input type="hidden" name="ThemeId"value="@Model.ThemeId" />
+
+    <div>
+        <label>Текст задания</label>
+        <textarea name="Text" class="form-control"></textarea>
+    </div>
+
+    <div>
+        <label>Правильный ответ</label>
+        <input name="CorrectAnswer" class="form-control" />
+    </div>
+
+    <div>
+        <label>Уровень сложности</label>
+        <input name="DifficultyLevel" type="number" class="form-control" />
+    </div>
+
+    <div>
+        <label>Картинка (опционально)</label>
+        <input type="file" name="Image" accept="image/*" />
+    </div>
+
+    <div>
+        <label>Файл (опционально)</label>
+        <input type="file" name="File" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Сохранить</button>
+</form>

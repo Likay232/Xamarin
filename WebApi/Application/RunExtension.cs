@@ -54,26 +54,59 @@ public static class RunExtension
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
             };
+
+            options.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = context =>
+                {
+                    var token = context.Request.Cookies["AuthToken"];
+                    if (!string.IsNullOrEmpty(token))
+                    {
+                        context.Token = token;
+                    }
+
+                    return Task.CompletedTask;
+                }
+            };
         });
     }
 
     public static void MappingEndpoints(this WebApplication app)
     {
         app.MigrateDatabase();
+
         app.UseHttpsRedirection();
+
+        app.UseStaticFiles();
+
         app.UseRouting();
 
         app.UseCors("AllowedOrigins");
 
-        app.UseSwagger();
+        app.UseAuthentication();
+        app.UseAuthorization();
 
+        app.UseSwagger();
         app.UseSwaggerUI(options =>
         {
             options.SwaggerEndpoint("/swagger/v1/swagger.json", "WebApi");
             options.RoutePrefix = "swagger";
         });
 
-        app.UseEndpoints(endpoints => endpoints.MapControllers());
+        app.MapControllerRoute(
+            name: "default",
+            pattern: "{controller=Auth}/{action=LoginAdmin}/{id?}");
+        
+        app.MapControllerRoute(
+            name:"AdminRoute",
+            pattern:"{controller=Admin}/{action=Index}/{id?}");
+        
+        app.MapGet("/", context =>
+        {
+            context.Response.Redirect("/Auth/LoginAdmin");
+            return Task.CompletedTask;
+        });
+
     }
 
     public static void RegistrationEndpoints(this WebApplicationBuilder builder)
@@ -81,8 +114,9 @@ public static class RunExtension
         builder.Services.AddScoped<AdminService>();
         builder.Services.AddScoped<AuthService>();
         builder.Services.AddScoped<ClientService>();
-        builder.Services.AddControllers();
-        
+        builder.Services.AddControllersWithViews();
+        builder.Services.AddRazorPages();
+
     }
 
 
