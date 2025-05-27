@@ -1,9 +1,11 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using WebApi.Infrastructure.Components;
 using WebApi.Infrastructure.Models.Requests;
+using WebApi.Infrastructure.Models.Storage;
 
 namespace WebApi.Services;
 
@@ -36,6 +38,26 @@ public class AuthService(DataComponent component)
         }
 
         return null;
+    }
+
+    public async Task<bool> Register(Register request)
+    {
+        var user = await component.Users.FirstOrDefaultAsync(u =>
+            u.Username == request.Username);
+
+        if (user != null)
+            throw new Exception("Имя пользователя занято.");
+
+        var newUser = new User
+        {
+            FirstName = request.FirstName,
+            LastName = request.LastName,
+            Username = request.Username,
+            Password = request.Password,
+            LastLogin = DateTime.MaxValue
+        };
+
+        return await component.Insert(newUser);
     }
 
     public async Task<string?> Login(Login request)

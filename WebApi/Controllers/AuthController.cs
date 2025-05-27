@@ -44,6 +44,19 @@ public class AuthController(AuthService service) : Controller
     }
 
     [HttpPost]
+    public async Task<ActionResult<bool>> Register(Register request)
+    {
+        try
+        {
+            return StatusCode(200, await service.Register(request));
+        }
+        catch (Exception e)
+        {
+            return StatusCode(500, e.Message);
+        }
+    }
+
+    [HttpPost]
     public async Task<ActionResult<string?>> LoginClient(Login request)
     {
         try
