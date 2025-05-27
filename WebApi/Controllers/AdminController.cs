@@ -44,7 +44,7 @@ public class AdminController(AdminService service) : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> ChangePasswordForUser([FromForm] ChangePassword request)
+    public async Task<IActionResult> ChangePasswordForUser([FromForm] ChangePasswordAdmin request)
     {
         try
         {

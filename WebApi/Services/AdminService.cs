@@ -39,7 +39,7 @@ public class AdminService(DataComponent component)
         return await component.Update(userToBlock);
     }
 
-    public async Task<bool> ChangeUserPassword(ChangePassword request)
+    public async Task<bool> ChangeUserPassword(ChangePasswordAdmin request)
     {
         var userEntry = await component.Users.FirstOrDefaultAsync(u => u.Id == request.userId);
 

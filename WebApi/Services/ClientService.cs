@@ -221,4 +221,17 @@ public class ClientService(DataComponent component)
 
         return task.CorrectAnswer == answer.Answer;
     }
+
+    public async Task<bool> ChangePassword(ChangePasswordClient request)
+    {
+        var user = await component.Users.FirstOrDefaultAsync(u => u.Id == request.UserId);
+        
+        if (user == null) return false;
+        
+        if (user.Password != request.OldPassword) return false;
+        
+        user.Password = request.NewPassword;
+        
+        return await component.Update(user);
+    }
 }
