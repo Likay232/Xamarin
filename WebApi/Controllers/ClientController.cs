@@ -125,5 +125,32 @@ public class ClientController(ClientService service) : ControllerBase
             return StatusCode(500, e.Message);
         }
     }
+    
+    [HttpGet]
+    public async Task<ActionResult<TaskDto>> GetRandomTask()
+    {
+        try
+        {
+            var randomTask = await service.GetRandomTask();
+            
+            return StatusCode(200, randomTask);
+        }
+        catch (Exception e)
+        {
+            return StatusCode(500, e.Message);
+        }
+    }
 
+    [HttpPost]
+    public async Task<ActionResult<bool>> CheckTask(CheckTask answer)
+    {
+        try
+        {
+            return StatusCode(200, await service.CheckTask(answer));
+        }
+        catch (Exception e)
+        {
+            return StatusCode(500, e.Message);
+        }
+    }
 }
