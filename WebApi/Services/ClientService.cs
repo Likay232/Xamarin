@@ -45,12 +45,6 @@ public class ClientService(DataComponent component)
             .Where(ct => ct.UserId == request.UserId)
             .ToListAsync();
 
-        foreach (var completedTask in completed)
-        {
-            Console.WriteLine(
-                $"Completed Task: {completedTask.Id} - taskId: {completedTask.TaskForTestId} UserID - {completedTask.UserId} Correct - {completedTask.IsCorrect}");
-        }
-
         var tasks = await component.Tasks
             .Where(t => t.ThemeId == request.ThemeId)
             .ToListAsync();
@@ -233,5 +227,40 @@ public class ClientService(DataComponent component)
         user.Password = request.NewPassword;
         
         return await component.Update(user);
+    }
+
+    public async Task<List<TaskForClientDto>> GenerateTest(GenerateTest request)
+    {
+        var test = new List<TaskForClientDto>();
+        var random = new Random();
+
+        foreach (var themeId in request.DesiredTasksAmount.Keys)
+        {
+            var tasks = await component.Tasks
+                .Where(t => t.ThemeId == themeId)
+                .ToListAsync();
+
+            var desiredTaskAmount = request.DesiredTasksAmount[themeId];
+
+            if (desiredTaskAmount > tasks.Count)
+                desiredTaskAmount = tasks.Count;
+
+            var selectedTasks = tasks
+                .OrderBy(_ => random.Next())
+                .Take(desiredTaskAmount)
+                .Select(t => new TaskForClientDto
+                {
+                    Id = t.Id,
+                    Text = t.Text,
+                    DifficultyLevel = t.DifficultyLevel,
+                    File = t.FileData,
+                    Image = t.ImageData,
+                    IsCorrect = false
+                });
+
+            test.AddRange(selectedTasks);
+        }
+
+        return test;
     }
 }

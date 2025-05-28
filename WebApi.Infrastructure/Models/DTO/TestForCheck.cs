@@ -3,7 +3,6 @@
 public class TestForCheck
 {
     public int UserId { get; set; }
-    public int TestId { get; set; }
     
     public List<UserAnswer> Answers { get; set; }
 }
