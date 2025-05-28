@@ -180,4 +180,16 @@ public class ClientController(ClientService service) : ControllerBase
         }
     }
 
+    [HttpGet]
+    public async Task<ActionResult<byte[]>> GetFileBytes(string fileName)
+    {
+        try
+        {
+            return StatusCode(200, await service.GetFileBytes(fileName));
+        }
+        catch (Exception e)
+        {
+            return StatusCode(500, e.Message);
+        }
+    }
 }

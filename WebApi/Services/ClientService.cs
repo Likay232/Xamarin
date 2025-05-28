@@ -6,7 +6,7 @@ using WebApi.Infrastructure.Models.Storage;
 
 namespace WebApi.Services;
 
-public class ClientService(DataComponent component)
+public class ClientService(DataComponent component, IWebHostEnvironment env)
 {
     public async Task<bool> RegisterDevice(RegisterDevice request)
     {
@@ -263,4 +263,17 @@ public class ClientService(DataComponent component)
 
         return test;
     }
+    
+    public async Task<byte[]?> GetFileBytes(string fileName)
+    {
+        var filePath = Path.Combine(env.ContentRootPath, "FileRepository", fileName);
+        
+        if (!File.Exists(filePath))
+            return null;
+
+        var fileBytes = await File.ReadAllBytesAsync(filePath);
+        
+        return fileBytes;
+    }
+
 }
