@@ -59,7 +59,7 @@ public class ClientService(DataComponent component)
                 Text = t.Text,
                 CorrectAnswer = t.CorrectAnswer,
                 DifficultyLevel = t.DifficultyLevel,
-                File = t.FileData,
+                File = t.FilePath,
                 Image = t.ImageData,
                 IsCorrect = completedTask?.IsCorrect ?? false
             };
@@ -102,7 +102,7 @@ public class ClientService(DataComponent component)
                 Text = t.TaskForTest.Text,
                 CorrectAnswer = "",
                 DifficultyLevel = t.TaskForTest.DifficultyLevel,
-                File = t.TaskForTest.FileData,
+                File = t.TaskForTest.FilePath,
                 Image = t.TaskForTest.ImageData,
                 IsCorrect = false,
             })
@@ -130,7 +130,7 @@ public class ClientService(DataComponent component)
                 {
                     Text = task != null ? task.Text : "",
                     ImageData = task?.ImageData,
-                    FileData = task?.FileData,
+                    FilePath = task?.FilePath,
                     Answer = userAnswer.Answer,
                 });
             }
@@ -155,7 +155,7 @@ public class ClientService(DataComponent component)
             Id = taskId,
             Text = taskFromDb.Text,
             DifficultyLevel = taskFromDb.DifficultyLevel,
-            File = taskFromDb.FileData,
+            File = taskFromDb.FilePath,
             Image = taskFromDb.ImageData,
             IsCorrect = false
         };
@@ -180,7 +180,7 @@ public class ClientService(DataComponent component)
             ThemeId = randomTask.ThemeId,
             Text = randomTask.Text,
             DifficultyLevel = randomTask.DifficultyLevel,
-            FileData = randomTask.FileData,
+            FilePath = randomTask.FilePath,
             ImageData = randomTask.ImageData,
         };
     }
@@ -253,7 +253,7 @@ public class ClientService(DataComponent component)
                     Id = t.Id,
                     Text = t.Text,
                     DifficultyLevel = t.DifficultyLevel,
-                    File = t.FileData,
+                    File = t.FilePath,
                     Image = t.ImageData,
                     IsCorrect = false
                 });

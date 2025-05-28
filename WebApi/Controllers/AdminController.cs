@@ -128,25 +128,29 @@ public class AdminController(AdminService service) : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> AddTask([FromForm] TaskDto model, IFormFile? Image, IFormFile? File)
+    public async Task<IActionResult> AddTask([FromForm] TaskDto model, IFormFile? image, IFormFile? file)
     {
         if (!ModelState.IsValid)
             return View(model);
 
         try
         {
-            if (Image is { Length: > 0 })
+            if (image is { Length: > 0 })
             {
                 using var ms = new MemoryStream();
-                await Image.CopyToAsync(ms);
+                await image.CopyToAsync(ms);
                 model.ImageData = ms.ToArray();
             }
 
-            if (File is { Length: > 0 })
+            if (file is { Length: > 0 })
             {
-                using var ms = new MemoryStream();
-                await File.CopyToAsync(ms);
-                model.FileData = ms.ToArray();
+                if (await service.SaveFileToRepo(file))
+                    model.FilePath = Path.GetFileName(file.FileName);
+                else
+                {
+                    ModelState.AddModelError("", "Не удалось добавить задание");
+                    return View(model);
+                }
             }
 
             var success = await service.AddTaskForTheme(model);
@@ -203,25 +207,29 @@ public class AdminController(AdminService service) : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> EditTask([FromForm] TaskDto model, IFormFile? Image, IFormFile? File)
+    public async Task<IActionResult> EditTask([FromForm] TaskDto model, IFormFile? image, IFormFile? file)
     {
         if (!ModelState.IsValid)
             return View(model);
 
         try
         {
-            if (Image is { Length: > 0 })
+            if (image is { Length: > 0 })
             {
                 using var ms = new MemoryStream();
-                await Image.CopyToAsync(ms);
+                await image.CopyToAsync(ms);
                 model.ImageData = ms.ToArray();
             }
 
-            if (File is { Length: > 0 })
+            if (file is { Length: > 0 })
             {
-                using var ms = new MemoryStream();
-                await File.CopyToAsync(ms);
-                model.FileData = ms.ToArray();
+                if (await service.SaveFileToRepo(file))
+                    model.FilePath = Path.GetFileName(file.FileName);
+                else
+                {
+                    ModelState.AddModelError("", "Не удалось обновить задание.");
+                    return View(model);
+                }
             }
             
             var result = await service.EditTaskForTheme(model);
@@ -266,7 +274,7 @@ public class AdminController(AdminService service) : Controller
                 .Select(id => id!.Value)
                 .ToList();
 
-            var result = await service.CreateTest(request);
+            await service.CreateTest(request);
             return RedirectToAction(nameof(Index));
         }
         catch (Exception e)
@@ -275,6 +283,23 @@ public class AdminController(AdminService service) : Controller
             var tasks = await service.GetTasks();
             ViewBag.Tasks = tasks;
             return View(request);
+        }
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> DownloadFileFromRepo(string filePath)
+    {
+        try
+        {
+            var fileBytes = await service.GetFileBytes(filePath);
+            
+            if (fileBytes == null) return NotFound();
+            
+            return File(fileBytes, "application/octet-stream", filePath);
+        }
+        catch (Exception e)
+        {
+            return StatusCode(500, e);
         }
     }
 }

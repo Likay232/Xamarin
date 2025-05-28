@@ -8,7 +8,7 @@ public class TaskForTest : BaseEntity
     public int DifficultyLevel { get; set; }
     
     public byte[]? ImageData { get; set; }
-    public byte[]? FileData { get; set; }
+    public string? FilePath { get; set; }
     
     public int ThemeId { get; set; }
     public Theme Theme { get; set; }

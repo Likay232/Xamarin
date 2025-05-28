@@ -6,7 +6,7 @@ using WebApi.Infrastructure.Models.Storage;
 
 namespace WebApi.Services;
 
-public class AdminService(DataComponent component)
+public class AdminService(DataComponent component, IWebHostEnvironment env)
 {
     public async Task<List<UserDto>> GetUsers()
     {
@@ -72,7 +72,7 @@ public class AdminService(DataComponent component)
                 Text = t.Text,
                 CorrectAnswer = t.CorrectAnswer,
                 DifficultyLevel = t.DifficultyLevel,
-                FileData = t.FileData,
+                FilePath = t.FilePath,
                 ImageData = t.ImageData
             })
             .ToListAsync();
@@ -91,7 +91,7 @@ public class AdminService(DataComponent component)
                 DifficultyLevel = task.DifficultyLevel,
                 ThemeId = task.ThemeId,
                 ImageData = task.ImageData,
-                FileData = task.FileData
+                FilePath = task.FilePath
             };
     }
 
@@ -110,15 +110,15 @@ public class AdminService(DataComponent component)
     {
         if (!component.Themes.Any(t => t.Id == taskToAdd.ThemeId))
             throw new Exception("Тема с таким Id не найдена.");
-
-        var newTask = new TaskForTest()
+        
+        var newTask = new TaskForTest
         {
             ThemeId = taskToAdd.ThemeId,
             Text = taskToAdd.Text,
             CorrectAnswer = taskToAdd.CorrectAnswer,
             DifficultyLevel = taskToAdd.DifficultyLevel,
             ImageData = taskToAdd.ImageData,
-            FileData = taskToAdd.FileData,
+            FilePath = taskToAdd.FilePath,
         };
 
         return await component.Insert(newTask);
@@ -138,7 +138,7 @@ public class AdminService(DataComponent component)
         taskToEdit.CorrectAnswer = updatedTask.CorrectAnswer;
         taskToEdit.DifficultyLevel = updatedTask.DifficultyLevel;
         taskToEdit.ImageData = updatedTask.ImageData;
-        taskToEdit.FileData = updatedTask.FileData;
+        taskToEdit.FilePath = updatedTask.FilePath;
         taskToEdit.ThemeId = updatedTask.ThemeId;
 
         return await component.Update(taskToEdit);
@@ -173,7 +173,7 @@ public class AdminService(DataComponent component)
                 CorrectAnswer = t.CorrectAnswer,
                 DifficultyLevel = t.DifficultyLevel,
                 ImageData = t.ImageData,
-                FileData = t.FileData,
+                FilePath = t.FilePath,
             })
             .ToListAsync();
     }
@@ -210,5 +210,32 @@ public class AdminService(DataComponent component)
         }
 
         return $"Тест успешно создан. ID: {newTest.Id}";
+    }
+
+    public async Task<bool> SaveFileToRepo(IFormFile file)
+    {
+        string fileName = Path.GetFileName(file.FileName);
+        
+        if (component.Tasks.Any(t => t.FilePath == fileName))
+            return false;
+        
+        var path = Path.Combine(env.ContentRootPath, "FileRepository", fileName);
+
+        await using var stream = new FileStream(path, FileMode.Create);
+        await file.CopyToAsync(stream);
+        
+        return true;
+    }
+
+    public async Task<byte[]?> GetFileBytes(string fileName)
+    {
+        var filePath = Path.Combine(env.ContentRootPath, "FileRepository", fileName);
+        
+        if (!File.Exists(filePath))
+            return null;
+
+        var fileBytes = await File.ReadAllBytesAsync(filePath);
+        
+        return fileBytes;
     }
 }

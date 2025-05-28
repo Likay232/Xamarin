@@ -97,10 +97,9 @@
                         <img src="@base64Image" alt="Изображение задания" class="task-image"/>
                     }
 
-                    @if (task.FileData != null)
+                    @if (task.FilePath != null)
                     {
-                        var fileBase64 = Convert.ToBase64String(task.FileData);
-                        <a href="data:application/octet-stream;base64,@fileBase64" download="task_file.bin" class="task-file">Скачать файл</a>
+                        <a href="@Url.Action("DownloadFileFromRepo", "Admin", new { filePath = @task.FilePath })" class="btn btn-edit">Скачать файл</a>
                     }
                 </div>
 

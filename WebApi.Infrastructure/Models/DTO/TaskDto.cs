@@ -12,5 +12,5 @@ public class TaskDto
     public int DifficultyLevel { get; set; }
     
     public byte[]? ImageData { get; set; }
-    public byte[]? FileData { get; set; }
+    public string? FilePath { get; set; }
 }
