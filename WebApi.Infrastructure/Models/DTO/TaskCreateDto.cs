@@ -6,8 +6,8 @@ public class TaskCreateDto
 {
     public int ThemeId { get; set; }
     
-    public string Text { get; set; }
-    public string CorrectAnswer { get; set; }
+    public string Text { get; set; } = string.Empty;
+    public string CorrectAnswer { get; set; } = string.Empty;
     
     public int DifficultyLevel { get; set; }
 

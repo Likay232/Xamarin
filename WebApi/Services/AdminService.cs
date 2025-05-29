@@ -16,7 +16,7 @@ public class AdminService(DataComponent component, IWebHostEnvironment env)
                 Id = u.Id,
                 FirstName = u.FirstName,
                 LastName = u.LastName,
-                IsBlocked = u.isBlocked
+                IsBlocked = u.IsBlocked
             })
             .ToListAsync();
     }
@@ -34,19 +34,19 @@ public class AdminService(DataComponent component, IWebHostEnvironment env)
         if (userToBlock == null)
             throw new Exception("Пользователь не найден.");
 
-        userToBlock.isBlocked = !userToBlock.isBlocked;
+        userToBlock.IsBlocked = !userToBlock.IsBlocked;
 
         return await component.Update(userToBlock);
     }
 
     public async Task<bool> ChangeUserPassword(ChangePasswordAdmin request)
     {
-        var userEntry = await component.Users.FirstOrDefaultAsync(u => u.Id == request.userId);
+        var userEntry = await component.Users.FirstOrDefaultAsync(u => u.Id == request.UserId);
 
         if (userEntry == null)
             throw new Exception("Пользователь с заданным Id не найден");
 
-        userEntry.Password = request.newPassword;
+        userEntry.Password = request.NewPassword;
 
         return await component.Update(userEntry);
     }

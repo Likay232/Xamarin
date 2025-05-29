@@ -2,6 +2,6 @@
 
 public class ChangePasswordAdmin
 {
-    public int userId { get; set; }
-    public string newPassword { get; set; }
+    public int UserId { get; set; }
+    public string NewPassword { get; set; } = string.Empty;
 }

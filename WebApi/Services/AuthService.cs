@@ -13,6 +13,8 @@ public class AuthService(DataComponent component)
 {
     public async Task<string?> LoginAdmin(Login request)
     {
+        await Task.Yield();
+        
         if (request is { UserName: "admin", Password: "admin123" })
         {
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -65,7 +67,7 @@ public class AuthService(DataComponent component)
         var user = component.Users.FirstOrDefault(u =>
             u.Username == request.UserName && u.Password == request.Password);
         
-        if (user == null || user.isBlocked)
+        if (user == null || user.IsBlocked)
             return null;
         
         user.LastLogin = DateTime.Now;

@@ -59,12 +59,12 @@ public class AdminController(AdminService service) : Controller
                 TempData["Message"] = "Пароль успешно изменён";
             }
 
-            return RedirectToAction("ChangePasswordForUser", new { request.userId });
+            return RedirectToAction("ChangePasswordForUser", new { userId = request.UserId });
         }
         catch (Exception ex)
         {
             TempData["Error"] = ex.Message;
-            return RedirectToAction("ChangePasswordForUser", new { request.userId });
+            return RedirectToAction("ChangePasswordForUser", new { userId = request.UserId });
         }
     }
 

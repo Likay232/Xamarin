@@ -2,5 +2,5 @@
 
 public class Test : BaseEntity
 {
-    public string Title { get; set; }
+    public string Title { get; set; } = string.Empty;
 }

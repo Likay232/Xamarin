@@ -2,7 +2,7 @@
 
 public class CreateTest
 {
-    public string Title { get; set; }
+    public string Title { get; set; } = string.Empty;
 
-    public List<int> TaskIds { get; set; }
+    public List<int> TaskIds { get; set; } = new();
 }
