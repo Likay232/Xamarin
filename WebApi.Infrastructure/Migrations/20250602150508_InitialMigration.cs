@@ -49,7 +49,8 @@ namespace WebApi.Infrastructure.Migrations
                     LastName = table.Column<string>(type: "text", nullable: false),
                     Username = table.Column<string>(type: "text", nullable: false),
                     Password = table.Column<string>(type: "text", nullable: false),
-                    LastLogin = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    LastLogin = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    IsBlocked = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -87,7 +88,7 @@ namespace WebApi.Infrastructure.Migrations
                     CorrectAnswer = table.Column<string>(type: "text", nullable: false),
                     DifficultyLevel = table.Column<int>(type: "integer", nullable: false),
                     ImageData = table.Column<byte[]>(type: "bytea", nullable: true),
-                    FileData = table.Column<byte[]>(type: "bytea", nullable: true),
+                    FilePath = table.Column<string>(type: "text", nullable: true),
                     ThemeId = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
@@ -109,7 +110,8 @@ namespace WebApi.Infrastructure.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     UserId = table.Column<int>(type: "integer", nullable: false),
                     ThemeId = table.Column<int>(type: "integer", nullable: false),
-                    Level = table.Column<int>(type: "integer", nullable: false)
+                    Level = table.Column<int>(type: "integer", nullable: false),
+                    AmountToLevelUp = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -129,14 +131,34 @@ namespace WebApi.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "user_devices",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    UserId = table.Column<int>(type: "integer", nullable: false),
+                    DeviceToken = table.Column<string>(type: "text", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_user_devices", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_user_devices_users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "completed_tasks",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     UserId = table.Column<int>(type: "integer", nullable: false),
-                    TaskId = table.Column<int>(type: "integer", nullable: false),
-                    TaskForTestId = table.Column<int>(type: "integer", nullable: false)
+                    TaskForTestId = table.Column<int>(type: "integer", nullable: false),
+                    IsCorrect = table.Column<bool>(type: "boolean", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -161,7 +183,6 @@ namespace WebApi.Infrastructure.Migrations
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    TaskId = table.Column<int>(type: "integer", nullable: false),
                     TaskForTestId = table.Column<int>(type: "integer", nullable: false),
                     TestId = table.Column<int>(type: "integer", nullable: false)
                 },
@@ -221,6 +242,11 @@ namespace WebApi.Infrastructure.Migrations
                 name: "IX_test_tasks_TestId",
                 table: "test_tasks",
                 column: "TestId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_user_devices_UserId",
+                table: "user_devices",
+                column: "UserId");
         }
 
         /// <inheritdoc />
@@ -239,13 +265,16 @@ namespace WebApi.Infrastructure.Migrations
                 name: "test_tasks");
 
             migrationBuilder.DropTable(
-                name: "users");
+                name: "user_devices");
 
             migrationBuilder.DropTable(
                 name: "tasks");
 
             migrationBuilder.DropTable(
                 name: "tests");
+
+            migrationBuilder.DropTable(
+                name: "users");
 
             migrationBuilder.DropTable(
                 name: "themes");

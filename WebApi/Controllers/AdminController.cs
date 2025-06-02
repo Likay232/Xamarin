@@ -250,7 +250,7 @@ public class AdminController(AdminService service) : Controller
     public async Task<IActionResult> CreateTest()
     {
         var tasks = await service.GetTasks();
-        ViewBag.Tasks = tasks;
+        ViewBag.Tasks = tasks ?? new List<TaskDto>();
         return View(new CreateTest());
     }
 

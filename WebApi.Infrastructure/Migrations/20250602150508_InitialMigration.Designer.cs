@@ -12,8 +12,8 @@ using WebApi.Infrastructure.Components;
 namespace WebApi.Infrastructure.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20250525144049_DevicesTableAdd")]
-    partial class DevicesTableAdd
+    [Migration("20250602150508_InitialMigration")]
+    partial class InitialMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -33,7 +33,7 @@ namespace WebApi.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<bool>("IsCorrect")
+                    b.Property<bool?>("IsCorrect")
                         .HasColumnType("boolean");
 
                     b.Property<int>("TaskForTestId")
@@ -84,6 +84,9 @@ namespace WebApi.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("AmountToLevelUp")
+                        .HasColumnType("integer");
+
                     b.Property<int>("Level")
                         .HasColumnType("integer");
 
@@ -117,8 +120,8 @@ namespace WebApi.Infrastructure.Migrations
                     b.Property<int>("DifficultyLevel")
                         .HasColumnType("integer");
 
-                    b.Property<byte[]>("FileData")
-                        .HasColumnType("bytea");
+                    b.Property<string>("FilePath")
+                        .HasColumnType("text");
 
                     b.Property<byte[]>("ImageData")
                         .HasColumnType("bytea");
@@ -210,6 +213,9 @@ namespace WebApi.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<bool>("IsBlocked")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTime>("LastLogin")
                         .HasColumnType("timestamp with time zone");
 
@@ -224,9 +230,6 @@ namespace WebApi.Infrastructure.Migrations
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<bool>("isBlocked")
-                        .HasColumnType("boolean");
 
                     b.HasKey("Id");
 

@@ -270,7 +270,7 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
                     task.Id,
                     task.Text,
                     task.DifficultyLevel,
-                    task.FilePath,
+                    FilePath = task.FilePath,
                     task.ImageData,
                     WasSolvedCorrectly = completedTasksIds.Contains(task.Id),
                 })
