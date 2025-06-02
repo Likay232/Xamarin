@@ -12,8 +12,8 @@ using WebApi.Infrastructure.Components;
 namespace WebApi.Infrastructure.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20250528172255_FileDraft")]
-    partial class FileDraft
+    [Migration("20250529184901_TaskTableUpdate")]
+    partial class TaskTableUpdate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -210,6 +210,9 @@ namespace WebApi.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<bool>("IsBlocked")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTime>("LastLogin")
                         .HasColumnType("timestamp with time zone");
 
@@ -224,9 +227,6 @@ namespace WebApi.Infrastructure.Migrations
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<bool>("isBlocked")
-                        .HasColumnType("boolean");
 
                     b.HasKey("Id");
 

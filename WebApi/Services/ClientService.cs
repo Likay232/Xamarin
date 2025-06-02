@@ -22,7 +22,7 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
             UserId = request.UserId,
             DeviceToken = request.DeviceToken,
         };
-        
+
         return await component.Insert(newUserDevice);
     }
 
@@ -61,7 +61,7 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
                 DifficultyLevel = t.DifficultyLevel,
                 File = t.FilePath,
                 Image = t.ImageData,
-                IsCorrect = completedTask?.IsCorrect ?? false
+                IsCorrect = completedTask?.IsCorrect ?? null
             };
         }).ToList();
     }
@@ -104,7 +104,6 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
                 DifficultyLevel = t.TaskForTest.DifficultyLevel,
                 File = t.TaskForTest.FilePath,
                 Image = t.TaskForTest.ImageData,
-                IsCorrect = false,
             })
             .ToListAsync();
     }
@@ -146,7 +145,7 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
     public async Task<TaskForClientDto> GetTaskById(int taskId)
     {
         var taskFromDb = await component.Tasks.FirstOrDefaultAsync(t => t.Id == taskId);
-        
+
         if (taskFromDb == null)
             throw new Exception("Задание с заданным id не найдено.");
 
@@ -159,19 +158,19 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
             Image = taskFromDb.ImageData,
             IsCorrect = false
         };
-        
+
         return task;
     }
 
     public async Task<TaskDto> GetRandomTask()
     {
         var tasks = await component.Tasks.ToListAsync();
-        
+
         if (tasks.Count == 0)
             throw new Exception("Задания не найдены в базе данных.");
-        
+
         var random = new Random();
-        
+
         var randomTask = tasks[random.Next(tasks.Count)];
 
         return new TaskDto
@@ -190,7 +189,7 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
         var task = await component.Tasks.FirstOrDefaultAsync(t => t.Id == answer.TaskId);
 
         if (task == null) return false;
-        
+
         var existing = await component.CompletedTasks
             .FirstOrDefaultAsync(ct => ct.UserId == answer.UserId && ct.TaskForTestId == answer.TaskId);
 
@@ -209,9 +208,11 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
                 UserId = answer.UserId,
                 IsCorrect = isCorrect
             };
-            
+
             await component.Insert(completedTaskToAdd);
         }
+
+        if (isCorrect) await UpdateProgress(answer.UserId, task.ThemeId, task.DifficultyLevel);
 
         return task.CorrectAnswer == answer.Answer;
     }
@@ -219,13 +220,13 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
     public async Task<bool> ChangePassword(ChangePasswordClient request)
     {
         var user = await component.Users.FirstOrDefaultAsync(u => u.Id == request.UserId);
-        
+
         if (user == null) return false;
-        
+
         if (user.Password != request.OldPassword) return false;
-        
+
         user.Password = request.NewPassword;
-        
+
         return await component.Update(user);
     }
 
@@ -236,17 +237,46 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
 
         foreach (var themeId in request.DesiredTasksAmount.Keys)
         {
+            var userProgress = await component.Progresses
+                .FirstOrDefaultAsync(p => p.ThemeId == themeId && p.UserId == request.UserId);
+
+            if (userProgress == null)
+            {
+                userProgress = new Progress
+                {
+                    UserId = request.UserId,
+                    ThemeId = themeId,
+                    Level = 1,
+                    AmountToLevelUp = 5
+                };
+
+                await component.Insert(userProgress);
+            }
+
             var tasks = await component.Tasks
                 .Where(t => t.ThemeId == themeId)
                 .ToListAsync();
+            
+            var completedTasksIds = await component.CompletedTasks
+                .Where(t => t.UserId == request.UserId && t.IsCorrect == true)
+                .Select(t => t.TaskForTestId)
+                .ToListAsync();
 
-            var desiredTaskAmount = request.DesiredTasksAmount[themeId];
-
-            if (desiredTaskAmount > tasks.Count)
-                desiredTaskAmount = tasks.Count;
+            var desiredTaskAmount = Math.Min(request.DesiredTasksAmount[themeId], tasks.Count);
 
             var selectedTasks = tasks
-                .OrderBy(_ => random.Next())
+                .Select(task => new
+                {
+                    task.Id,
+                    task.Text,
+                    task.DifficultyLevel,
+                    task.FilePath,
+                    task.ImageData,
+                    WasSolvedCorrectly = completedTasksIds.Contains(task.Id),
+                })
+                .OrderBy(t => t.WasSolvedCorrectly ? 1 : 0)
+                .ThenBy(t => t.DifficultyLevel <= userProgress.Level ? 0 : 1)
+                .ThenBy(_ => random.Next())
                 .Take(desiredTaskAmount)
                 .Select(t => new TaskForClientDto
                 {
@@ -255,7 +285,6 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
                     DifficultyLevel = t.DifficultyLevel,
                     File = t.FilePath,
                     Image = t.ImageData,
-                    IsCorrect = false
                 });
 
             test.AddRange(selectedTasks);
@@ -263,17 +292,66 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
 
         return test;
     }
-    
+
     public async Task<byte[]?> GetFileBytes(string fileName)
     {
         var filePath = Path.Combine(env.ContentRootPath, "FileRepository", fileName);
-        
+
         if (!File.Exists(filePath))
             return null;
 
         var fileBytes = await File.ReadAllBytesAsync(filePath);
-        
+
         return fileBytes;
+    }
+
+    private async Task UpdateProgress(int userId, int themeId, int taskDifficulty)
+    {
+        var existingEntry = await component.Progresses
+            .FirstOrDefaultAsync(p => p.UserId == userId && p.ThemeId == themeId);
+
+        const int maxLevel = 5;
+        int currentLevel = existingEntry?.Level ?? 1;
+        int currentAmount = existingEntry?.AmountToLevelUp ?? 5;
+
+        if (currentLevel >= maxLevel)
+            return;
+
+        int decrement = CalculateDecrement(taskDifficulty, currentLevel);
+
+        int updatedAmount = currentAmount - decrement;
+
+        int updatedLevel = currentLevel;
+
+        if (updatedAmount <= 0)
+        {
+            updatedLevel = Math.Min(currentLevel + 1, maxLevel);
+            updatedAmount = 5;
+        }
+
+        if (existingEntry == null)
+        {
+            var newProgress = new Progress
+            {
+                UserId = userId,
+                ThemeId = themeId,
+                Level = updatedLevel,
+                AmountToLevelUp = updatedAmount
+            };
+            await component.Insert(newProgress);
+        }
+        else
+        {
+            existingEntry.Level = updatedLevel;
+            existingEntry.AmountToLevelUp = updatedAmount;
+            await component.Update(existingEntry);
+        }
+    }
+
+    private int CalculateDecrement(int taskDifficulty, int currentLevel)
+    {
+        int diff = taskDifficulty - currentLevel;
+        return diff >= 0 ? diff + 1 : 1;
     }
 
 }

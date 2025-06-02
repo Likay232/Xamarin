@@ -9,4 +9,5 @@ public class Progress : BaseEntity
     public Theme Theme { get; set; } = null!;
     
     public int Level { get; set; }
+    public int AmountToLevelUp { get; set; }
 }

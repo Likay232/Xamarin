@@ -8,5 +8,5 @@ public class CompletedTask : BaseEntity
     public int TaskForTestId { get; set; }
     public TaskForTest TaskForTest { get; set; } = null!;
     
-    public bool IsCorrect { get; set; }
+    public bool? IsCorrect { get; set; }
 }

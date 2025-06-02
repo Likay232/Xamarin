@@ -5,20 +5,15 @@
 namespace WebApi.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class FileDraft : Migration
+    public partial class TaskTableUpdate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "FileData",
-                table: "tasks");
-
-            migrationBuilder.AddColumn<string>(
-                name: "FilePath",
-                table: "tasks",
-                type: "text",
-                nullable: true);
+            migrationBuilder.RenameColumn(
+                name: "isBlocked",
+                table: "users",
+                newName: "IsBlocked");
         }
 
         /// <inheritdoc />
@@ -27,6 +22,11 @@ namespace WebApi.Infrastructure.Migrations
             migrationBuilder.DropColumn(
                 name: "FilePath",
                 table: "tasks");
+
+            migrationBuilder.RenameColumn(
+                name: "IsBlocked",
+                table: "users",
+                newName: "isBlocked");
 
             migrationBuilder.AddColumn<byte[]>(
                 name: "FileData",
