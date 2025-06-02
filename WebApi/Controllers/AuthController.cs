@@ -23,7 +23,7 @@ public class AuthController(AuthService service) : Controller
 
             if (string.IsNullOrEmpty(token))
             {
-                return StatusCode(401, "Неверные логин / пароль.");
+                return RedirectToAction("LoginAdmin", "Auth");
             }
             
             var cookieOptions = new CookieOptions
@@ -37,9 +37,9 @@ public class AuthController(AuthService service) : Controller
 
             return RedirectToAction("Index", "Admin");
         }
-        catch (Exception e)
+        catch
         {
-            return StatusCode(500, e.Message);
+            return RedirectToAction("LoginAdmin", "Auth");
         }
     }
 
