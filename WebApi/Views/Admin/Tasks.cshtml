@@ -69,6 +69,10 @@
         margin-right: 8px;
     }
 
+    .btn-add {
+        background-color: #5cb85c;
+    }
+
     .btn-edit {
         background-color: #0275d8;
     }
@@ -80,6 +84,10 @@
 
 @if (Model != null && Model.Any())
 {
+    <div style="margin-top: 20px;">
+        <a href="@Url.Action("AddTask", "Admin", new { themeId = Model[0].ThemeId })" class="btn btn-add">Добавить задание к теме</a>
+    </div>
+    
     <div id="themes-container">
         @foreach (var task in Model)
         {

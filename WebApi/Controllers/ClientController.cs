@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using WebApi.Infrastructure.Models.DTO;
 using WebApi.Infrastructure.Models.Requests;
 using WebApi.Infrastructure.Models.Storage;
@@ -8,6 +9,7 @@ namespace WebApi.Controllers;
 
 [ApiController]
 [Route("[controller]/[action]")]
+[Authorize(Policy = "NotBlocked")]
 public class ClientController(ClientService service) : ControllerBase
 {
     [HttpPost]

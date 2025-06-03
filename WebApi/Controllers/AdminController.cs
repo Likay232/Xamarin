@@ -85,6 +85,8 @@ public class AdminController(AdminService service) : Controller
     {
         try
         {
+            if (request.Description == null) request.Description = string.Empty; 
+            
             await service.CreateNewTheme(request);
             return RedirectToAction(nameof(Themes));
         }
@@ -281,7 +283,7 @@ public class AdminController(AdminService service) : Controller
         {
             ModelState.AddModelError("", $"Ошибка при создании теста: {e.Message}");
             var tasks = await service.GetTasks();
-            ViewBag.Tasks = tasks;
+            ViewBag.Tasks = tasks;  
             return View(request);
         }
     }

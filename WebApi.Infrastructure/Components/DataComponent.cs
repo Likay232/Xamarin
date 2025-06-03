@@ -23,7 +23,7 @@ public class DataComponent(string connectionString)
             await context.SaveChangesAsync();
             return true;
         }
-        catch
+        catch (Exception e)
         {
             return false;
         }

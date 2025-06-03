@@ -1,8 +1,11 @@
 ﻿using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using WebApi.AuthorizationRequirements.Handlers;
+using WebApi.AuthorizationRequirements.Requirements;
 using WebApi.Infrastructure.Components;
 using WebApi.Services;
 
@@ -71,6 +74,17 @@ public static class RunExtension
         });
     }
 
+    public static void AddAuthorization(this WebApplicationBuilder builder)
+    {
+        builder.Services.AddScoped<IAuthorizationHandler, NotBlockedHandler>();
+        builder.Services.AddAuthorization(options =>
+        {
+            options.AddPolicy("NotBlocked", policy =>
+                policy.RequireAuthenticatedUser()
+                    .AddRequirements(new NotBlockedRequirement()));
+        });
+    }
+
     public static void MappingEndpoints(this WebApplication app)
     {
         app.MigrateDatabase();
@@ -116,7 +130,6 @@ public static class RunExtension
         builder.Services.AddScoped<ClientService>();
         builder.Services.AddControllersWithViews();
         builder.Services.AddRazorPages();
-
     }
 
 
